@@ -6,15 +6,15 @@ import (
 
 type Currency struct {
 	ID           int64     `gorm:"primaryKey"`
-	AdjustInd    string    `gorm:"size:1"`
-	Begin        time.Time `gorm:"type:date"`
-	Decimals     int       `gorm:"not null"`
-	End          time.Time `gorm:"type:date"`
-	EwuFlag      BoolBit   `gorm:"not null"`
-	IsoCode      string    `gorm:"size:3"`
-	RoundingUnit float64   `gorm:"not null"`
-	LastUpdate   time.Time `gorm:"default:current_timestamp"`
-	CurrencyID   int64     `gorm:"not null"`
+	AdjustInd    string    `gorm:"size:1 ; column:adjustInd"`
+	Begin        time.Time `gorm:"type:date; column:begin"`
+	Decimals     int       `gorm:"not null; column:decimals"`
+	End          time.Time `gorm:"type:date; column:end"`
+	EwuFlag      BoolBit   `gorm:"not null; column:ewuFlag"`
+	IsoCode      string    `gorm:"size:3; column:isoCode"`
+	RoundingUnit float64   `gorm:"not null; column:roundingUnit"`
+	LastUpdate   time.Time `gorm:"default:current_timestamp; column:last_update"`
+	CurrencyID   int64     `gorm:"not null; column:currencyId"`
 }
 
 func (Currency) TableName() string {
