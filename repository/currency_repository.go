@@ -8,12 +8,12 @@ import (
 )
 
 type CurrencyRepository interface {
-	Create(currency *model.Currency) error
-	FindById(id int64) (*model.Currency, error)
-	Update(currency *model.Currency) error
-	Delete(id int64) error
+	CreateCurrency(currency *model.Currency) error
+	FindCurrencyById(id int64) (*model.Currency, error)
+	UpdateCurrency(currency *model.Currency) error
+	DeleteCurrencyById(id int64) error
 	GetAllCurrencies() []model.Currency
-	FindByISOCode(isoCode string) (*model.Currency, error)
+	FindCurrencyByIsoCode(isoCode string) (*model.Currency, error)
 }
 
 type currencyRepository struct {
@@ -34,11 +34,11 @@ func Repo() *currencyRepository {
 	return repo
 }
 
-func (r *currencyRepository) Create(currency *model.Currency) error {
+func (r *currencyRepository) CreateCurrency(currency *model.Currency) error {
 	return r.db.Create(currency).Error
 }
 
-func (r *currencyRepository) FindById(id int64) (*model.Currency, error) {
+func (r *currencyRepository) FindCurrencyById(id int64) (*model.Currency, error) {
 
 	var currency model.Currency
 	result := db.DB.First(&currency, id)
@@ -52,12 +52,21 @@ func (r *currencyRepository) FindById(id int64) (*model.Currency, error) {
 	return &currency, nil
 }
 
-func (r *currencyRepository) Update(currency *model.Currency) error {
-	return r.db.Save(currency).Error
+func (repo *currencyRepository) UpdateCurrency(currency *model.Currency) error {
+	result := db.DB.Save(currency)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil // no error occurred
 }
 
-func (r *currencyRepository) Delete(id int64) error {
-	return r.db.Delete(&model.Currency{}, id).Error
+func (r *currencyRepository) DeleteCurrencyById(id int64) error {
+
+	result := db.DB.Delete(&model.Currency{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil // no error occurred
 }
 
 func (r *currencyRepository) GetAllCurrencies() []model.Currency {
@@ -66,7 +75,7 @@ func (r *currencyRepository) GetAllCurrencies() []model.Currency {
 	return currencies
 }
 
-func (r *currencyRepository) FindByISOCode(isoCode string) (*model.Currency, error) {
+func (r *currencyRepository) FindCurrencyByIsoCode(isoCode string) (*model.Currency, error) {
 	var currency model.Currency
 	result := db.DB.Where("isoCode = ?", isoCode).First(&currency)
 

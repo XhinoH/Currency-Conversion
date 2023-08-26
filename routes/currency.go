@@ -12,5 +12,7 @@ func Init() *gin.Engine {
 	r.GET("/currencies/:id", handler.GetCurrencyByID)
 	r.POST("/currencies", handler.CreateCurrency)
 	r.GET("/currencies/iso/:isoCode", handler.GetCurrencyByIsoCode)
+	r.PUT("/currencies/:id", handler.UpdateCurrency)
+	r.DELETE("/currencies/:id", handler.DeleteCurrencyById)
 	return r
 }
