@@ -3,6 +3,7 @@ package repository
 import (
 	"gocapri/db"
 	"gocapri/model"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -14,31 +15,23 @@ type CurrencyRepository interface {
 	DeleteCurrencyById(id int64) error
 	GetAllCurrencies() []model.Currency
 	FindCurrencyByIsoCode(isoCode string) (*model.Currency, error)
+	GetCurrencyIdFromIsoCode(isoCode string) int64
+	GetConversionRate(targetCurrencyId int64, exchangeRateKindId int64, end time.Time) float64
 }
 
-type currencyRepository struct {
+type CurrencyRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func NewCurrencyRepository(db *gorm.DB) *currencyRepository {
-	return &currencyRepository{db: db}
+func NewCurrencyRepository(db *gorm.DB) *CurrencyRepositoryImpl {
+	return &CurrencyRepositoryImpl{db: db}
 }
 
-var repo *currencyRepository
-
-func Repo() *currencyRepository {
-	if repo == nil {
-		repo = NewCurrencyRepository(db.DB)
-
-	}
-	return repo
-}
-
-func (r *currencyRepository) CreateCurrency(currency *model.Currency) error {
+func (r *CurrencyRepositoryImpl) CreateCurrency(currency *model.Currency) error {
 	return r.db.Create(currency).Error
 }
 
-func (r *currencyRepository) FindCurrencyById(id int64) (*model.Currency, error) {
+func (r *CurrencyRepositoryImpl) FindCurrencyById(id int64) (*model.Currency, error) {
 
 	var currency model.Currency
 	result := db.DB.First(&currency, id)
@@ -52,7 +45,7 @@ func (r *currencyRepository) FindCurrencyById(id int64) (*model.Currency, error)
 	return &currency, nil
 }
 
-func (repo *currencyRepository) UpdateCurrency(currency *model.Currency) error {
+func (repo *CurrencyRepositoryImpl) UpdateCurrency(currency *model.Currency) error {
 	result := db.DB.Save(currency)
 	if result.Error != nil {
 		return result.Error
@@ -60,7 +53,7 @@ func (repo *currencyRepository) UpdateCurrency(currency *model.Currency) error {
 	return nil // no error occurred
 }
 
-func (r *currencyRepository) DeleteCurrencyById(id int64) error {
+func (r *CurrencyRepositoryImpl) DeleteCurrencyById(id int64) error {
 
 	result := db.DB.Delete(&model.Currency{}, id)
 	if result.Error != nil {
@@ -69,13 +62,13 @@ func (r *currencyRepository) DeleteCurrencyById(id int64) error {
 	return nil // no error occurred
 }
 
-func (r *currencyRepository) GetAllCurrencies() []model.Currency {
+func (r *CurrencyRepositoryImpl) GetAllCurrencies() []model.Currency {
 	var currencies []model.Currency
 	r.db.Find(&currencies)
 	return currencies
 }
 
-func (r *currencyRepository) FindCurrencyByIsoCode(isoCode string) (*model.Currency, error) {
+func (r *CurrencyRepositoryImpl) FindCurrencyByIsoCode(isoCode string) (*model.Currency, error) {
 	var currency model.Currency
 	result := db.DB.Where("isoCode = ?", isoCode).First(&currency)
 
@@ -86,4 +79,28 @@ func (r *currencyRepository) FindCurrencyByIsoCode(isoCode string) (*model.Curre
 	}
 
 	return &currency, nil
+}
+
+func (r *CurrencyRepositoryImpl) GetCurrencyIdFromIsoCode(isoCode string) int64 {
+	var seq int64
+	currency := model.Currency{}
+
+	r.db.Table("currencys").
+		Select("currencyId").
+		Where("isoCode = ?", isoCode).
+		First(&currency)
+	return seq
+
+}
+
+func (r *CurrencyRepositoryImpl) GetConversionRate(targetCurrencyId int64, exchangeRateKindId int64, end time.Time) float64 {
+	var conversionRate float64
+
+	exchangeRateGlobal := model.ExchangeRateGlobal{}
+	r.db.Table("exchange_rate_globals").
+		Select("conversionRate").
+		Where("currencyId = ? AND exchangeRateKindId = ? AND end = ?", targetCurrencyId, exchangeRateKindId, end).
+		First(&exchangeRateGlobal)
+
+	return conversionRate
 }

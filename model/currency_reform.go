@@ -5,19 +5,19 @@ import (
 )
 
 type CurrencyReform struct {
-	ID             int64
-	Begin          time.Time
-	ConvRate       float64
-	CurrencyFromID int64
-	CurrencyToID   int64
-	DivFlag        BoolBit
-	End            time.Time
-	Seq            int64
-	UnitsSource    int
-	UnitsTarget    int
-	LastUpdate     time.Time
+	ID             int      `gorm:"primaryKey"`
+	Begin          *time.Time `gorm:"type:date; column:begin"`
+	ConvRate       float64    `gorm:"not null; type:decimal(11,6);column:convRate"`
+	CurrencyFromID int      `gorm:"default:NULL;colum:currencyFromId"`
+	CurrencyToID   int      `gorm:"default:NULL;colum:currencyToId"`
+	DivFlag        BoolBit    `gorm:"not null;column:divFlag"`
+	End            *time.Time `gorm:"type:date;column:end"`
+	Seq            int      `gorm:"not null;column:seq"`
+	UnitsSource    int        `gorm:"not null;column:unitsSource"`
+	UnitsTarget    int        `gorm:"not null;column:unitsTarget"`
+	LastUpdate     time.Time  `gorm:"default:current_timestamp;colum:last_update"`
 }
 
-func (c *CurrencyReform) TableName() string {
+func (CurrencyReform) TableName() string {
 	return "currency_reforms"
 }

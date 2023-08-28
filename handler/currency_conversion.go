@@ -1,32 +1,28 @@
 package handler
 
 // import (
-// 	"errors"
+// 	"gocapri/model"
 // 	"gocapri/repository"
 // 	"net/http"
-// 	"strconv"
 
 // 	"github.com/gin-gonic/gin"
-// 	"gorm.io/gorm"
 // )
 
-// func ConvertCurrency(c *gin.Context) {
-// 	from := c.Param("from")
-// 	to := c.Param("to")
-// 	amount, err := strconv.ParseFloat(c.Param("amount"), 64)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid amount"})
+// func GetConversionRate(c *gin.Context) {
+// 	var request model.CurrencyConversionRequest
+// 	if err := c.ShouldBindJSON(&request); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 // 		return
 // 	}
 
-// 	currency, err := repository.Repo().FindByISOCode(from)
-// 	if err != nil {
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			c.JSON(http.StatusNotFound, gin.H{"error": "Currency not found"})
-// 			return
-// 		}
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred"})
-// 		return
+// 	// TODO : Add error handling
+
+// 	convertedAmount := request.Amount * conversionRate
+
+// 	response := model.CurrencyConversionResponse{
+// 		Amount:       convertedAmount,
+// 		ExchangeRate: conversionRate,
 // 	}
 
+// 	c.JSON(http.StatusOK, response)
 // }

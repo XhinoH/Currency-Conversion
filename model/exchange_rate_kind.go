@@ -5,17 +5,17 @@ import (
 )
 
 type ExchangeRateKind struct {
-	ID                           int64
-	Begin                        time.Time
-	CurrencyTargetID             int64
-	End                          time.Time
-	EwuOverruledFlag             BoolBit
-	ExchangeRateKindAlternativID int64
-	GlobalFlag                   BoolBit
-	Seq                          int64
-	LastUpdate                   time.Time
+	ID                           int      `gorm:"primaryKey"`
+	Begin                        *time.Time `gorm:"type:date;colum:begin"`
+	CurrencyTargetID             int      `gorm:"default:NULL;colum:currencyTargetId"`
+	End                          *time.Time `gorm:"type:date;colum:end"`
+	EwuOverruledFlag             BoolBit    `gorm:"not null;colum:ewuOverruledFlag"`
+	ExchangeRateKindAlternativID int      `gorm:"default:NULL;colum:exchangeRateKindAlternativId"`
+	GlobalFlag                   BoolBit    `gorm:"not null;colum:globalFlag"`
+	Seq                          int      `gorm:"not null;colum:seq"`
+	LastUpdate                   time.Time  `gorm:"default:current_timestamp;colum:last_update"`
 }
 
-func (c *ExchangeRateKind) TableName() string {
+func (ExchangeRateKind) TableName() string {
 	return "exchange_rate_kinds"
 }
