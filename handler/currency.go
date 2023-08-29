@@ -1,11 +1,10 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"gocapri/model"
 	"gocapri/repository"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -171,40 +170,55 @@ func (ch *CurrencyHandler) DeleteCurrencyById(c *gin.Context) {
 
 func (ch *CurrencyHandler) GetConversionRate(c *gin.Context) {
 	var request model.CurrencyConversionRequest
+ 
+	var response model.CurrencyConversionResponse
 
-	amount := request.Amount
-	sourceCurrency := request.SourceCurrency
-	targetCurrency := request.TargetCurrency
-	conversionDate := request.ConversionDate
-
-	if amount != 0 {
-		c.Status(http.StatusBadRequest)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Empty amount"})
+	if err := c.BindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if sourceCurrency == "" {
-		c.Status(http.StatusBadRequest)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Empty sourceCurrency"})
+
+	// Now you can access the parameters from the struct
+	amount := request.Amount
+	conversionDate := request.ConversionDate
+	sourceCurrency := request.SourceCurrency
+	targetCurrency := request.TargetCurrency
+
+	if amount == 0 || conversionDate.IsZero() || sourceCurrency == "" || targetCurrency == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
 	sourceCurrencyId := ch.cr.GetCurrencyIdFromIsoCode(sourceCurrency)
 	targetCurrencyId := ch.cr.GetCurrencyIdFromIsoCode(targetCurrency)
 
-	conversionSeq := ch.er.GetConversionSeqFromCurrencyId(int(sourceCurrencyId))
+	if sourceCurrency != "USD" && sourceCurrency != "EUR" {
+		targetCurrencyId = ch.cr.GetCurrencyIdFromIsoCode(sourceCurrency)
+		conversionSeq := 9999999999
+		conversionToUSD := ch.cr.GetConversionRate(int64(targetCurrencyId), int64(conversionSeq), conversionDate)
+		conversionToUSD = 1 / conversionToUSD
 
-	conversionRate := ch.cr.GetConversionRate(targetCurrencyId, conversionSeq, conversionDate)
-	response := model.CurrencyConversionResponse{
-		Amount:       amount * conversionRate,
-		ExchangeRate: conversionRate,
-	}
+		amountInUsd := amount * conversionToUSD
 
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		fmt.Println("Error:", err)
+		targetCurrencyId = ch.cr.GetCurrencyIdFromIsoCode(targetCurrency)
+		conversionRate := ch.cr.GetConversionRate(targetCurrencyId, 9999999999, conversionDate)
+
+		roundedAmount := math.Round(amountInUsd*conversionRate*100) / 100
+		roundedExchangeRate := math.Round(conversionToUSD*conversionRate*10000) / 10000
+		response.Amount = roundedAmount
+		response.ExchangeRate = roundedExchangeRate
+
+		c.JSON(http.StatusOK, response)
 		return
 	}
 
-	// Print the JSON response
-	fmt.Println(string(jsonResponse))
+	conversionSeq := ch.er.GetConversionSeqFromCurrencyId(int(sourceCurrencyId))
+
+	conversionRate := ch.cr.GetConversionRate(targetCurrencyId, conversionSeq, conversionDate)
+
+	response.Amount = amount * conversionRate
+	response.ExchangeRate = conversionRate
+
+	c.JSON(http.StatusOK, response)
+
 }

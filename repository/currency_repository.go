@@ -82,19 +82,16 @@ func (r *CurrencyRepositoryImpl) FindCurrencyByIsoCode(isoCode string) (*model.C
 }
 
 func (r *CurrencyRepositoryImpl) GetCurrencyIdFromIsoCode(isoCode string) int64 {
-	var seq int64
 	currency := model.Currency{}
 
 	r.db.Table("currencys").
 		Select("currencyId").
 		Where("isoCode = ?", isoCode).
 		First(&currency)
-	return seq
-
+	return int64(currency.CurrencyID)
 }
 
 func (r *CurrencyRepositoryImpl) GetConversionRate(targetCurrencyId int64, exchangeRateKindId int64, end time.Time) float64 {
-	var conversionRate float64
 
 	exchangeRateGlobal := model.ExchangeRateGlobal{}
 	r.db.Table("exchange_rate_globals").
@@ -102,5 +99,9 @@ func (r *CurrencyRepositoryImpl) GetConversionRate(targetCurrencyId int64, excha
 		Where("currencyId = ? AND exchangeRateKindId = ? AND end = ?", targetCurrencyId, exchangeRateKindId, end).
 		First(&exchangeRateGlobal)
 
-	return conversionRate
+	return exchangeRateGlobal.ConversionRate
 }
+
+// func (r *CurrencyRepositoryImpl) convertSourceCurrencyToEurUsd (sourceCurrencyId int64) int64 {
+// }
+
